@@ -19,7 +19,7 @@ public class CountryServiceiml implements CountryService {
     }
 
     @Override
-    public CountryEntity createCountry(String id, CountryEntity countryEntity) {
+    public CountryEntity createCountry(int id, CountryEntity countryEntity) {
         countryEntity.setId(id);
         return countryRepository.save(countryEntity);
 

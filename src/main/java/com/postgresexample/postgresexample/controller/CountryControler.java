@@ -2,6 +2,11 @@ package com.postgresexample.postgresexample.controller;
 
 import java.util.List;
 import java.util.stream.Collectors;
+
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,28 +20,38 @@ import com.postgresexample.postgresexample.mappers.Mapper;
 import com.postgresexample.postgresexample.services.impl.CountryServiceiml;
 
 @RestController
-@RequestMapping(value={"/weather/country","/weather/country/"})
+@RequestMapping(value = { "/weather/country", "/weather/country/" })
 public class CountryControler {
-    
-     private CountryServiceiml countryServices;
-    private Mapper<CountryEntity,CountryDto> countryMapper;
 
-    public CountryControler(CountryServiceiml countryServices,Mapper<CountryEntity,CountryDto> countryMapper){
-        this.countryServices=countryServices;
-        this.countryMapper=countryMapper;
+    private CountryServiceiml countryServices;
+    private Mapper<CountryEntity, CountryDto> countryMapper;
+
+    public CountryControler(CountryServiceiml countryServices, Mapper<CountryEntity, CountryDto> countryMapper) {
+        this.countryServices = countryServices;
+        this.countryMapper = countryMapper;
     }
 
+    
+    @CacheEvict(value = "countries", allEntries = true)
     @PostMapping("{id}")
-    public CountryDto createCountry(@PathVariable("id") String id,@RequestBody CountryDto country){
-    CountryEntity countryEntity= countryMapper.mapFrom(country);
+    public ResponseEntity<Object> createCountry(@PathVariable("id") int id, @RequestBody CountryDto country) {
+        System.out.println("getting this id "+ id);
+        if (country.getCountry() == null || country.getCountry().isEmpty()) {
+            String errorMessage = "Please provide a valid 'country' value in the request body.";
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMessage);
+
+        }
+
+        CountryEntity countryEntity = countryMapper.mapFrom(country);
         CountryEntity savedCountryEntity = countryServices.createCountry(id, countryEntity);
-        return countryMapper.mapTo(savedCountryEntity);
+        CountryDto responseCountryDto = countryMapper.mapTo(savedCountryEntity);
+        return ResponseEntity.ok(responseCountryDto);
     }
 
-    
+    @Cacheable("countries")
     @GetMapping("")
-    public List<CountryDto> listAllCountries(){
-        List<CountryEntity> countries=countryServices.findAll();
+    public List<CountryDto> listAllCountries() {
+        List<CountryEntity> countries = countryServices.findAll();
         return countries.stream().map(countryMapper::mapTo).collect(Collectors.toList());
     }
 }

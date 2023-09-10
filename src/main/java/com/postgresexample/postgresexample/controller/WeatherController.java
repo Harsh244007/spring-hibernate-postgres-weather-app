@@ -3,6 +3,10 @@ package com.postgresexample.postgresexample.controller;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -26,18 +30,34 @@ public class WeatherController {
         this.weatherMapper=weatherMapper;
     }
 
+    @CacheEvict(value = "weather", allEntries = true)
     @PostMapping("")
-    public WeatherDto createWeather(@RequestBody WeatherDto weather){
-        WeatherEntity weatherEntity= weatherMapper.mapFrom(weather);
+    public ResponseEntity<Object> createWeather(@RequestBody WeatherDto weather) {
+
+        if (weather.getCountry() == null || weather.getCountry().isEmpty()) {
+            String errorMessage = "Please provide a valid 'country' value in the request body.";
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMessage);
+        }
+
+        if (weather.getCity() == null || weather.getCity().isEmpty()) {
+            String errorMessage = "Please provide a valid 'city' value in the request body.";
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMessage);
+        }
+
+        WeatherEntity weatherEntity = weatherMapper.mapFrom(weather);
         WeatherEntity savedWeatherEntity = weatherServices.createWeather(weatherEntity);
-        return weatherMapper.mapTo(savedWeatherEntity);
+        WeatherDto responseCountryDto = weatherMapper.mapTo(savedWeatherEntity);
+        return ResponseEntity.ok(responseCountryDto);
     }
 
+    
+    @Cacheable("weather")
     @GetMapping("")
-    public List<WeatherDto> listAllWeather(){
-        List<WeatherEntity> weathers=weatherServices.findAll();
+    public List<WeatherDto> listAllWeather() {
+        List<WeatherEntity> weathers = weatherServices.findAll();
         return weathers.stream().map(weatherMapper::mapTo).collect(Collectors.toList());
     }
+
 
 
 }

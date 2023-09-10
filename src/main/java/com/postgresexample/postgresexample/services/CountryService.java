@@ -8,7 +8,7 @@ import com.postgresexample.postgresexample.Modal.CountryEntity;
 
 @Service
 public interface CountryService {
-    CountryEntity createCountry(String id,CountryEntity country);
+    CountryEntity createCountry(int id,CountryEntity country);
     
     List<CountryEntity> findAll();
     

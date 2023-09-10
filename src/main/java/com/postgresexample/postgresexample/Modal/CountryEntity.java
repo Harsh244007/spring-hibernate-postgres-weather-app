@@ -17,13 +17,13 @@ import lombok.NoArgsConstructor;
 @Table(name ="country")
 public class CountryEntity {
 
+    // @GeneratedValue(strategy = GenerationType.SEQUENCE,generator = "country_id_seq")
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE,generator = "country_id_deq")
+    private int id;
     
     // @ManyToOne(cascade = CascadeType.ALL)
     // @JoinColumn(name="country_id")
     // private WeatherEntity country;
-    private String id;
     private String country;
 
 }
