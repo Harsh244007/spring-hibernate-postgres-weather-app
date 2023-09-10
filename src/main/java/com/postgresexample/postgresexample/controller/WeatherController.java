@@ -1,0 +1,43 @@
+package com.postgresexample.postgresexample.controller;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.postgresexample.postgresexample.Modal.WeatherEntity;
+import com.postgresexample.postgresexample.Modal.dto.WeatherDto;
+import com.postgresexample.postgresexample.mappers.Mapper;
+import com.postgresexample.postgresexample.services.WeatherServices;
+
+@RestController
+@RequestMapping(value={"/weather","/weather/"})
+public class WeatherController {
+ 
+    private WeatherServices weatherServices;
+    private Mapper<WeatherEntity,WeatherDto> weatherMapper;
+
+    public WeatherController(WeatherServices weatherServices,Mapper<WeatherEntity,WeatherDto> weatherMapper){
+        this.weatherServices=weatherServices;
+        this.weatherMapper=weatherMapper;
+    }
+
+    @PostMapping("")
+    public WeatherDto createWeather(@RequestBody WeatherDto weather){
+        WeatherEntity weatherEntity= weatherMapper.mapFrom(weather);
+        WeatherEntity savedWeatherEntity = weatherServices.createWeather(weatherEntity);
+        return weatherMapper.mapTo(savedWeatherEntity);
+    }
+
+    @GetMapping("")
+    public List<WeatherDto> listAllWeather(){
+        List<WeatherEntity> weathers=weatherServices.findAll();
+        return weathers.stream().map(weatherMapper::mapTo).collect(Collectors.toList());
+    }
+
+
+}
